@@ -4,9 +4,80 @@ if __name__ is not None and "." in __name__:
     from .SqlBaseParser import SqlBaseParser
 else:
     from SqlBaseParser import SqlBaseParser
+    from Query import Query,Table, Relation
+
 
 # This class defines a complete listener for a parse tree produced by SqlBaseParser.
 class SqlBaseListener(ParseTreeListener):
+
+    def initialize(self):
+        self.table_stack = []
+        self.relation_stack = []
+        self.query = Query()
+
+    def get_query_metadata(self):
+        return self.query
+
+    # Enter a parse tree produced by SqlBaseParser#joinRelation.
+    def enterJoinRelation(self, ctx:SqlBaseParser.JoinRelationContext):
+        print("enterJoinRelation",ctx.getText())
+        relation = Relation()
+        relation.set_left_table(self.table_stack.pop())
+        self.relation_stack.append(relation)
+
+    def enterJoinType(self, ctx:SqlBaseParser.JoinTypeContext):
+        print("enterJoinType", ctx.getText())
+        relation = self.relation_stack.pop()
+        relation.set_join_type(ctx.getText())
+        self.relation_stack.append(relation)
+
+
+    # Enter a parse tree produced by SqlBaseParser#tableAlias.
+    def enterTableAlias(self, ctx:SqlBaseParser.TableAliasContext):
+        print("enterTableAlias", ctx.getText())
+        alias_name = ctx.getText()
+        table_name = ctx.parentCtx.getText()
+        db_name=""
+        if "SELECT" not in table_name:
+            if "." in table_name:
+                parts = table_name.split(".")
+                db_name = parts[0]
+                table_name = parts[1]
+            if len(alias_name) > 0:
+                table_name = table_name.replace(alias_name, '')
+            self.query.add_table(Table(db_name, table_name, alias_name))
+            self.table_stack.append(table_name)
+            if len(self.relation_stack) == 1:
+                relation = self.relation_stack.pop()
+                relation.set_right_table(table_name)
+                self.relation_stack.append(relation)
+
+    # Enter a parse tree produced by SqlBaseParser#expression.
+    def enterExpression(self, ctx:SqlBaseParser.ExpressionContext):
+        if len(self.relation_stack)>0:
+            relation = self.relation_stack.pop()
+            expr = ctx.getText()
+            for table in self.query.tables:
+                expr = expr.replace(table.alias, table.name)
+            relation.set_expression(expr)
+            self.query.add_relation(relation)
+
+    # Enter a parse tree produced by SqlBaseParser#functionName.
+    def enterFunctionName(self, ctx:SqlBaseParser.FunctionNameContext):
+        self.query.add_function(ctx.getText())
+
+
+    # Enter a parse tree produced by SqlBaseParser#joinHint.
+    def enterJoinHint(self, ctx:SqlBaseParser.JoinHintContext):
+        print("enterJoinHint", ctx.getText())
+        relation = self.relation_stack.pop()
+        relation.set_join_hint(ctx.getText().replace("]","").replace("[",""))
+        self.relation_stack.append(relation)
+
+    # Exit a parse tree produced by SqlBaseParser#joinHint.
+    def exitJoinHint(self, ctx:SqlBaseParser.JoinHintContext):
+        pass
+
 
     # Enter a parse tree produced by SqlBaseParser#singleStatement.
     def enterSingleStatement(self, ctx:SqlBaseParser.SingleStatementContext):
@@ -1371,20 +1442,10 @@ class SqlBaseListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by SqlBaseParser#joinRelation.
-    def enterJoinRelation(self, ctx:SqlBaseParser.JoinRelationContext):
-        print("enterJoinRelation:", ctx.getText())
-        pass
-
     # Exit a parse tree produced by SqlBaseParser#joinRelation.
     def exitJoinRelation(self, ctx:SqlBaseParser.JoinRelationContext):
         pass
 
-
-    # Enter a parse tree produced by SqlBaseParser#joinType.
-    def enterJoinType(self, ctx:SqlBaseParser.JoinTypeContext):
-        print("enterJoinType:", ctx.getText())
-        pass
 
     # Exit a parse tree produced by SqlBaseParser#joinType.
     def exitJoinType(self, ctx:SqlBaseParser.JoinTypeContext):
@@ -1505,7 +1566,7 @@ class SqlBaseListener(ParseTreeListener):
 
     # Enter a parse tree produced by SqlBaseParser#tableName.
     def enterTableName(self, ctx:SqlBaseParser.TableNameContext):
-        print("enterTableName",ctx.getText())
+        print("enterTableName", ctx.getText())
         pass
 
     # Exit a parse tree produced by SqlBaseParser#tableName.
@@ -1525,6 +1586,7 @@ class SqlBaseListener(ParseTreeListener):
 
     # Enter a parse tree produced by SqlBaseParser#aliasedRelation.
     def enterAliasedRelation(self, ctx:SqlBaseParser.AliasedRelationContext):
+        print("enterAliasedRelation:"+ctx.getText())
         pass
 
     # Exit a parse tree produced by SqlBaseParser#aliasedRelation.
@@ -1568,9 +1630,6 @@ class SqlBaseListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by SqlBaseParser#tableAlias.
-    def enterTableAlias(self, ctx:SqlBaseParser.TableAliasContext):
-        pass
 
     # Exit a parse tree produced by SqlBaseParser#tableAlias.
     def exitTableAlias(self, ctx:SqlBaseParser.TableAliasContext):
@@ -1704,10 +1763,7 @@ class SqlBaseListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by SqlBaseParser#expression.
-    def enterExpression(self, ctx:SqlBaseParser.ExpressionContext):
-        print("enterExpression",ctx.getText())
-        pass
+
 
     # Exit a parse tree produced by SqlBaseParser#expression.
     def exitExpression(self, ctx:SqlBaseParser.ExpressionContext):
@@ -2294,10 +2350,7 @@ class SqlBaseListener(ParseTreeListener):
         pass
 
 
-    # Enter a parse tree produced by SqlBaseParser#functionName.
-    def enterFunctionName(self, ctx:SqlBaseParser.FunctionNameContext):
-        print(" enterFunctionName listener:", ctx.getText())
-        pass
+
 
     # Exit a parse tree produced by SqlBaseParser#functionName.
     def exitFunctionName(self, ctx:SqlBaseParser.FunctionNameContext):

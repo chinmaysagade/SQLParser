@@ -824,11 +824,6 @@ class SqlBaseVisitor(ParseTreeVisitor):
         return self.visitChildren(ctx)
 
 
-    # Visit a parse tree produced by SqlBaseParser#joinHint.
-    def visitJoinHint(self, ctx:SqlBaseParser.JoinHintContext):
-        return self.visitChildren(ctx)
-
-
     # Visit a parse tree produced by SqlBaseParser#tableName.
     def visitTableName(self, ctx:SqlBaseParser.TableNameContext):
         return self.visitChildren(ctx)

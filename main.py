@@ -12,6 +12,7 @@ if __name__=="__main__":
     for root, directories, files in os.walk(path, topdown=False):
         for name in files:
             sql_files.append(os.path.join(root, name))
+    sql_files = ["C:\\Users\\csaga\\PycharmProjects\\SQLParser\\test\\sqls\\ComplexJoin.sql"]
     for f in sql_files:
         print(f)
         file = FileStream(f)
@@ -24,9 +25,12 @@ if __name__=="__main__":
         parser = SqlBaseParser(stream)
         tree = parser.singleStatement()
         lisp_tree_str = tree.toStringTree(recog=parser)
+
         print(lisp_tree_str)
-        htmlChat = SqlBaseListener()
+        sqlListener = SqlBaseListener()
+        sqlListener.initialize()
         walker = ParseTreeWalker()
-        walker.walk(htmlChat, tree)
+        walker.walk(sqlListener, tree)
+        print(sqlListener.get_query_metadata())
 
 

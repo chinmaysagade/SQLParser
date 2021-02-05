@@ -565,7 +565,7 @@ relation
     ;
 
 joinRelation
-    : (joinType) JOIN right=relationPrimary joinCriteria?
+    : (joinType) JOIN  joinHint? right=relationPrimary joinCriteria?
     | NATURAL joinType JOIN right=relationPrimary
     ;
 
@@ -620,8 +620,11 @@ identifierComment
     : identifier commentSpec?
     ;
 
+joinHint
+    : '[' (SHUFFLE | BROADCAST) ']';
+
 relationPrimary
-    : multipartIdentifier sample? tableAlias  #tableName
+    :  multipartIdentifier sample? tableAlias  #tableName
     | '(' query ')' sample? tableAlias        #aliasedQuery
     | '(' relation ')' sample? tableAlias     #aliasedRelation
     | inlineTable                             #inlineTableDefault2
@@ -1435,6 +1438,7 @@ BOTH: 'BOTH';
 BUCKET: 'BUCKET';
 BUCKETS: 'BUCKETS';
 BY: 'BY';
+BROADCAST: 'BROADCAST';
 CACHE: 'CACHE';
 CASCADE: 'CASCADE';
 CASE: 'CASE';
@@ -1617,6 +1621,7 @@ SET: 'SET';
 SETMINUS: 'MINUS';
 SETS: 'SETS';
 SHOW: 'SHOW';
+SHUFFLE: 'SHUFFLE';
 SKEWED: 'SKEWED';
 SOME: 'SOME';
 SORT: 'SORT';
