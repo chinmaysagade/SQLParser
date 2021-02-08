@@ -7,7 +7,7 @@ import os
 from io import StringIO
 
 def testSelectClause() :
-    lexer = SqlBaseLexer(InputStream ("SELECT ANC,ABV1 FROM DB1.TABLE1"))
+    lexer = SqlBaseLexer(InputStream ("SELECT ANC,ABV1 FROM DB1.123TABLE1"))
     stream = CommonTokenStream(lexer)
     stream.fill()
     print('tokens:')

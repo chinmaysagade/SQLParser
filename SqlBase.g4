@@ -1742,7 +1742,7 @@ BIGDECIMAL_LITERAL
     ;
 
 IDENTIFIER
-    : (LETTER | DIGIT | '_')+
+    : (LETTER | DIGIT | '_'| '.')+
     ;
 
 BACKQUOTED_IDENTIFIER

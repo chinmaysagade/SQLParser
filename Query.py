@@ -7,7 +7,7 @@ class Table():
         self.alias = alias
 
     def __str__(self):
-        return "{}.{}=>{}".format(self.db, self.name, self.alias)
+        return "{}.{}".format(self.db, self.name)
 
 
 class Relation():
@@ -35,7 +35,7 @@ class Relation():
         self.join_hint = join_hint
 
     def __str__(self):
-        return "Relation : {},{},{},{},{}".format(self.type, self.left_table, self.right_table, self.expression, self.join_hint)
+        return " {},{},{},{},{}".format(self.type, self.left_table, self.right_table, self.expression, self.join_hint)
 
 class Query():
 
@@ -43,7 +43,8 @@ class Query():
         self.tables = []
         self.relations = []
         self.functions = []
-        self.is_aggregate = False
+        self.aggregates = []
+        self.filters = []
 
     def add_table(self, table):
         self.tables.append(table)
@@ -51,11 +52,14 @@ class Query():
     def add_relation(self, relation):
         self.relations.append(relation)
 
-    def set_is_aggregate(self, is_aggregate):
-        self.is_aggregate = is_aggregate
-
     def add_function(self, function):
         self.functions.append(function)
+
+    def add_aggregates(self, aggregate):
+        self.aggregates.append(aggregate)
+
+    def add_filters(self, filter):
+        self.filters.append(filter)
 
     def get_table_name_by_alias(self, alias):
         for table in self.tables:
@@ -64,4 +68,8 @@ class Query():
         return "None"
 
     def __str__(self):
-        return ",".join([ str(x) for x in self.tables ])+" "+",".join([ str(x) for x in self.relations ])+",functions:"+",".join([ str(x) for x in self.functions ])
+        return "Tables:"+" ;".join(["("+str(x)+")"for x in self.tables ])\
+               +"\nRelations: "+"\n".join([ "("+str(x)+")" for x in self.relations ])\
+               +"\nFunctions:"+" ;".join([ str(x) for x in self.functions ])\
+               +"\nFilters:" + " ;".join([str(x) for x in self.filters])\
+               +"\nAggregates:" + " ;".join([str(x) for x in self.aggregates])
