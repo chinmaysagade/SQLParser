@@ -45,6 +45,7 @@ class Query():
         self.functions = []
         self.aggregates = []
         self.filters = []
+        self.columns = set()
 
     def add_table(self, table):
         self.tables.append(table)
@@ -61,6 +62,10 @@ class Query():
     def add_filters(self, filter):
         self.filters.append(filter)
 
+    def add_columns(self, column):
+        if column is not None:
+            self.columns.add(column)
+
     def get_table_name_by_alias(self, alias):
         for table in self.tables:
             if table.alias == alias:
@@ -68,7 +73,8 @@ class Query():
         return "None"
 
     def __str__(self):
-        return "Tables:"+" ;".join(["("+str(x)+")"for x in self.tables ])\
+        return "Tables:"+" ;".join(["("+str(x)+")"for x in self.tables ]) \
+               + "\nColumns:" + " ;".join([str(x) for x in self.columns])\
                +"\nRelations: "+"\n".join([ "("+str(x)+")" for x in self.relations ])\
                +"\nFunctions:"+" ;".join([ str(x) for x in self.functions ])\
                +"\nFilters:" + " ;".join([str(x) for x in self.filters])\

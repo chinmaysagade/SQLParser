@@ -21,17 +21,19 @@ class SQLParserListenerImpl(ParseTreeListener):
     def substitute_alias_with_name(self, expr):
         for table in self.query.tables:
             if len(table.alias) > 1:
-                return expr.replace(table.alias + ".", table.name)
+                return expr.replace(table.alias, table.name)
             else:
                 return expr
 
     # Enter a parse tree produced by SqlBaseParser#joinRelation.
     def enterJoinRelation(self, ctx:SqlBaseParser.JoinRelationContext):
+        #print("enterJoinRelation:", ctx.getText())
         relation = Relation()
         relation.set_left_table(self.table_stack.pop())
         self.relation_stack.append(relation)
 
     def enterJoinType(self, ctx:SqlBaseParser.JoinTypeContext):
+        #print("enterJoinType:", ctx.getText())
         relation = self.relation_stack.pop()
         relation.set_join_type(ctx.getText())
         self.relation_stack.append(relation)
@@ -39,6 +41,7 @@ class SQLParserListenerImpl(ParseTreeListener):
 
     # Enter a parse tree produced by SqlBaseParser#tableAlias.
     def enterTableAlias(self, ctx:SqlBaseParser.TableAliasContext):
+        #print("enterTableAlias:", ctx.getText())
         alias_name = ctx.getText()
         table_name = ctx.parentCtx.getText()
         db_name=""
@@ -84,7 +87,7 @@ class SQLParserListenerImpl(ParseTreeListener):
         self.relation_stack.append(relation)
 
     def enterAggregationClause(self, ctx:SqlBaseParser.AggregationClauseContext):
-        print("enterAggregationClause",ctx.getText())
+        #print("enterAggregationClause",ctx.getText())
         grp_expr = ctx.getText().replace("GROUPBY","")
         grp_cols = grp_expr.split(",")
         for col in grp_cols:
@@ -92,12 +95,13 @@ class SQLParserListenerImpl(ParseTreeListener):
         pass
 
     def enterWhereClause(self, ctx:SqlBaseParser.WhereClauseContext):
-        print("enterWhereClause:", ctx.getText())
+        #print("enterWhereClause:", ctx.getText())
         where_clause = ctx.getText().replace("WHERE","")
         where_parts = where_clause.split('AND')
         for part in where_parts:
             self.query.add_filters(self.substitute_alias_with_name(part))
 
-
+    def enterColumnReference(self, ctx:SqlBaseParser.ColumnReferenceContext):
+        self.query.add_columns(self.substitute_alias_with_name(ctx.getText()))
 
 del SqlBaseParser
