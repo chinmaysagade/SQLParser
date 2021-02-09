@@ -11,7 +11,6 @@ def pre_process(query_string):
         query_string = query_string.replace(replace_str,"")
     return query_string
 
-
 def parse(query_string):
     processed_query_string = pre_process(query_string)
     print(processed_query_string)

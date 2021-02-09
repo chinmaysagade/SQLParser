@@ -10,6 +10,25 @@ class Table():
         return "{}.{}".format(self.db, self.name)
 
 
+class Filter():
+
+    def __init__(self):
+        self.column= ""
+        self.type = ""
+        self.expr = ""
+
+    def set_filter_type(self, type):
+        self.type=type
+
+    def set_filter_column(self, column):
+        self.column=column
+
+    def set_filter_expr(self,expr):
+        self.expr=expr
+
+    def __str__(self):
+        return "({},{},{})".format(self.column, self.type, self.expr)
+
 class Relation():
 
     def __init__(self):

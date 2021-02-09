@@ -4,7 +4,8 @@ if __name__ is not None and "." in __name__:
     from .SqlBaseParser import SqlBaseParser
 else:
     from SqlBaseParser import SqlBaseParser
-    from Query import Query,Table, Relation
+    from SqlBaseLexer import SqlBaseLexer
+    from Query import Query,Table, Relation, Filter
 
 
 # This class defines a complete listener for a parse tree produced by SqlBaseParser.
@@ -94,12 +95,48 @@ class SQLParserListenerImpl(ParseTreeListener):
             self.query.add_aggregates(self.substitute_alias_with_name(col))
         pass
 
+    def extract_filter(self, expr):
+        lexer = SqlBaseLexer(InputStream(expr))
+        stream = CommonTokenStream(lexer)
+        stream.fill()
+        filter_cond = Filter()
+        for tk in stream.tokens:
+            print(tk)
+            val = expr[tk.start:tk.stop + 1].strip()
+            print("val:", val)
+            if tk.type == 292:
+                filter_cond.set_filter_column(val)
+            elif tk.type == 113:
+                filter_cond.set_filter_type("IN")
+            elif tk.type == 26:
+                filter_cond.set_filter_type("BETWEEN")
+            elif tk.type == 264:
+                filter_cond.set_filter_type("EQUALS")
+            elif tk.type == 271 or tk.type == 269 or tk.type == 268 or tk.type == 270:
+                filter_cond.set_filter_type("INEQUALITY")
+
+        if filter_cond.type == "BETWEEN":
+            fexpr = ""
+            for tk in stream.tokens:
+                if tk.type == 282:
+                    fexpr = expr + expr[tk.start:tk.stop + 1].strip() + ";"
+            filter_cond.set_filter_expr(fexpr)
+
+        if filter_cond.type == "EQUALS" or filter_cond.type == "INEQUALITY":
+            fexpr = ""
+            for tk in stream.tokens:
+                if tk.type == 282:
+                    fexpr = expr[tk.start:tk.stop + 1].strip()
+            filter_cond.set_filter_expr(fexpr)
+
+        return filter_cond
+
     def enterWhereClause(self, ctx:SqlBaseParser.WhereClauseContext):
-        #print("enterWhereClause:", ctx.getText())
         where_clause = ctx.getText().replace("WHERE","")
         where_parts = where_clause.split('AND')
         for part in where_parts:
-            self.query.add_filters(self.substitute_alias_with_name(part))
+            print(part)
+            self.query.add_filters(self.extract_filter(self.substitute_alias_with_name(part)))
 
     def enterColumnReference(self, ctx:SqlBaseParser.ColumnReferenceContext):
         self.query.add_columns(self.substitute_alias_with_name(ctx.getText()))
