@@ -5,24 +5,27 @@ from SQLParserListenerImpl import SQLParserListenerImpl
 import os
 
 
+
 def pre_process(query_string):
     substitution_strings = ["STRAIGHT_JOIN"]
     for replace_str in substitution_strings:
         query_string = query_string.replace(replace_str,"")
     return query_string
 
+
 def parse(query_string):
-    processed_query_string = pre_process(query_string)
-    print(processed_query_string)
+    processed_query_string = pre_process(query_string.upper())
+    #print(processed_query_string)
+    #print("===")
     lexer = SqlBaseLexer(InputStream(processed_query_string))
     stream = CommonTokenStream(lexer)
     stream.fill()
     parser = SqlBaseParser(stream)
-    ast = parser.singleStatement()
-    ast_str = ast.toStringTree(recog=parser)
-    print(ast_str)
+    ast = parser.statement()
+    #ast_str = ast.toStringTree(recog=parser)
+    #print(ast_str)
     sql_listener = SQLParserListenerImpl()
-    sql_listener.initialize()
+    sql_listener.initialize(query_string)
     ast_visitor = ParseTreeWalker()
     ast_visitor.walk(sql_listener, ast)
     return sql_listener.get_query_metadata()
@@ -42,6 +45,5 @@ if __name__ == "__main__":
         with open(f, 'r') as sql_file:
             sql =sql_file.read().upper()
         print(parse(sql))
-
 
 
